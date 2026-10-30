@@ -1,0 +1,22 @@
+{
+  "name": "apex-race-lab",
+  "version": "1.0.0",
+  "directories": {
+    "doc": "docs",
+    "test": "tests"
+  },
+  "scripts": {
+    "dev": "python3 -m http.server 4173 --directory dist --bind 127.0.0.1",
+    "test": "node --test tests/*.test.js",
+    "check": "node --check dist/app.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "MIT",
+  "description": "3D Formula 1 replay and reproducible data engineering lab",
+  "dependencies": {
+    "three": "^0.180.0"
+  },
+  "private": true,
+  "type": "module"
+}

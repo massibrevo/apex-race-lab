@@ -1,0 +1,31 @@
+name: Data contracts and replay
+on: [push, pull_request]
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: node --check dist/app.js && node --test tests/*.test.js
+      - run: python -m unittest discover -s tests -p 'test_*.py'
+      - run: pip install -r requirements-lock.txt
+      - run: python pipeline/warehouse.py
+      - run: cd dbt && dbt build --profiles-dir .
+      - run: python pipeline/publish.py
+  airflow-dag:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install 'apache-airflow==3.3.2' apache-airflow-providers-standard --constraint https://raw.githubusercontent.com/apache/airflow/constraints-3.3.2/constraints-3.12.txt
+      - name: Parse DAG and verify dependency chain
+        env:
+          AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
+        run: python -c 'import runpy; d=runpy.run_path("dags/apex_archive.py")["dag"]; assert len(d.tasks)==5; assert d.get_task("publish_gold").upstream_task_ids == {"dbt_build_and_test"}'

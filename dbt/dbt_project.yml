@@ -1,0 +1,12 @@
+name: apex
+version: '1.0.0'
+config-version: 2
+profile: apex
+model-paths: [models]
+test-paths: [tests]
+models:
+  apex:
+    staging:
+      +materialized: view
+    marts:
+      +materialized: table

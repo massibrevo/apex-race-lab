@@ -1,0 +1,14 @@
+node_modules/
+.venv/
+__pycache__/
+data/bronze/
+data/*.duckdb*
+dbt/target/
+dbt/logs/
+.env*
+.openai/deploy*
+*.tar.gz
+.DS_Store
+
+.venv-airflow/
+.airflow/

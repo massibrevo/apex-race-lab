@@ -1,0 +1,18 @@
+version: 2
+models:
+  - name: stg_laps
+    description: Typed, session-scoped driver laps; missing timings remain null.
+    columns:
+      - name: lap_id
+        tests: [not_null, unique]
+      - name: session_key
+        tests: [not_null]
+      - name: driver_number
+        tests: [not_null]
+      - name: lap_number
+        tests: [not_null]
+  - name: driver_pace
+    description: Descriptive full-race pace excluding pit out laps. Not fuel or weather adjusted.
+    columns:
+      - name: fastest_lap_seconds
+        tests: [not_null]

@@ -1,0 +1,7 @@
+apex:
+  target: dev
+  outputs:
+    dev:
+      type: duckdb
+      path: ../data/apex.duckdb
+      threads: 2
