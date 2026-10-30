@@ -1,5 +1,5 @@
 """Idempotent OpenF1 bronze ingestion. Public historical endpoints, bounded retries."""
-import argparse, json, time, hashlib
+import argparse, json, time, hashlib, os
 from datetime import datetime, timezone
 from pathlib import Path
 from urllib.request import urlopen, Request
@@ -9,14 +9,17 @@ ROOT = Path(__file__).resolve().parents[1]
 API = 'https://api.openf1.org/v1/'
 
 def fetch(endpoint, params, cache):
-    url = API + endpoint + '?' + urlencode(params)
+    url = API + endpoint + '?' + urlencode(params, doseq=True)
     path = cache / (endpoint + '-' + hashlib.sha256(url.encode()).hexdigest()[:16] + '.json')
     if path.exists():
         return json.loads(path.read_text())
     cache.mkdir(parents=True, exist_ok=True)
     for attempt in range(6):
         try:
-            with urlopen(Request(url, headers={'User-Agent':'APEX-Race-Lab/1.0'}), timeout=180) as response:
+            headers={'User-Agent':'APEX-Race-Lab/1.0'}
+            token=os.environ.get('OPENF1_ACCESS_TOKEN')
+            if token:headers['Authorization']='Bearer '+token
+            with urlopen(Request(url, headers=headers), timeout=180) as response:
                 rows = json.load(response)
             if not isinstance(rows, list): raise ValueError('Expected a JSON array')
             temp = path.with_suffix('.tmp'); temp.write_text(json.dumps(rows)); temp.replace(path)

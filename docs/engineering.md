@@ -2,7 +2,7 @@
 
 ## Data contracts
 
-OpenF1's historical API is the source of truth. An archive has `schema_version: 1`, session metadata, driver dimensions, one circuit reference lap, GPS samples, telemetry samples, race position events, full-session laps, stints, race-control events and a provenance block.
+OpenF1 supplies recorded timing and metadata for all 48 races. GPS/car telemetry is bundled for 2024; the 2025 GPS downloads are pending source access. Every read model declares `session.replay_available`. A timing-only archive contains empty GPS, telemetry and track fields plus an explicit availability reason; the viewer opens lap analysis and disables unavailable replay controls. An archive has `schema_version: 1`, session metadata, driver dimensions, one circuit reference lap, GPS samples, telemetry samples, race position events, full-session laps, stints, race-control events and a provenance block.
 
 GPS rows are `[elapsed_seconds, x, y, z]`. Car telemetry rows are `[elapsed_seconds, speed_kmh, throttle_percent, brake_percent, gear, rpm, drs]`. Driver-number strings key each sampled series. All times are relative to the ISO 8601 UTC excerpt start. Coordinates use OpenF1's coordinate system; the renderer translates and uniformly scales them into scene units. The visual does not claim surveyed track geometry or real elevation.
 
@@ -12,7 +12,7 @@ The renderer performs a binary search into each series. It interpolates GPS only
 
 ## Warehouse and transformations
 
-`pipeline/warehouse.py` uses parameterized inserts into `data/apex.duckdb`. It rebuilds bronze tables from the exact shipped read models, making a rerun idempotent. Run it on a single writer; Airflow limits concurrent DAG runs to one. Bronze lap keys are `(session_key, driver_number, lap_number)`.
+`pipeline/warehouse.py` uses parameterized file reads into `data/apex.duckdb`. It bulk-loads bronze tables from all shipped read models through temporary flat CSV staging files and typed DuckDB bulk reads, making a rerun idempotent. Staging files are streamed with Python’s standard CSV writer and removed after the load. The load is transactional; failed extraction rolls back instead of leaving partial tables. Run it on a single writer; Airflow limits concurrent DAG runs to one. `bronze.sessions` records season and excerpt duration for each race. Bronze lap keys are `(session_key, driver_number, lap_number)`.
 
 - `bronze.drivers`: participant dimension scoped to session.
 - `bronze.laps`: lap duration, sector timing and pit-out indicator.
@@ -30,7 +30,7 @@ To explore:
 
 ## Airflow 3 orchestration
 
-The manual DAG in `dags/apex_archive.py` uses Airflow's SDK and standard BashOperator provider. It runs ingest/export → warehouse load → dbt build/tests → gold publication → archive contract validation. Session selection is a typed enum (9590 or 9558), passed through a quoted environment variable. Failed ingestion retries twice; the HTTP client has bounded retry/backoff internally. No production schedule is configured.
+The manual DAG in `dags/apex_archive.py` uses Airflow's SDK and standard BashOperator provider. It runs ingest/export → warehouse load → dbt build/tests → gold publication → archive contract validation. Session selection is a typed enum generated from the complete 48-race catalog, passed through a quoted environment variable. Failed ingestion retries twice; the HTTP client has bounded retry/backoff internally. No production schedule is configured.
 
 Install Airflow in a **separate Python 3.12 environment** using the official version constraints, as documented in [Airflow installation](https://airflow.apache.org/docs/apache-airflow/stable/installation/index.html). Pin Airflow 3.3.2 and its matching Python 3.12 constraint file. Include `apache-airflow-providers-standard`. Do not install Airflow into the dbt environment because its dependency constraints differ.
 
@@ -38,13 +38,15 @@ Before starting the scheduler, set `APEX_ROOT` to the absolute checkout path, se
 
 The Site does not run an Airflow scheduler or a Python process. Newly exported files reach the website only after a normal source commit and Site deployment. Airflow is an optional local orchestration exercise.
 
-## Add another session or a longer window
+## Rebuild seasons or add another session
 
-1. Look up a historical session via `/v1/sessions` in the [OpenF1 API reference](https://openf1.org/docs/).
-2. Add its metadata and explicit UTC replay window to `pipeline/export.py`. Ensure the excerpt contains a complete clean lap for circuit reconstruction.
-3. Run export, warehouse load, dbt build and gold publication. Inspect coverage and data contracts. For a full race, fetch GPS and telemetry in bounded time chunks and merge with `(driver_number, date)` deduplication before export; the included examples intentionally use eight-minute windows.
-4. Register the session in the HTML selector and corresponding title metadata in `dist/app.js`. Extend the archive tests for its expected duration and field coverage.
-5. Commit the new read model, then publish the static application. Do not commit bronze caches or a DuckDB binary.
+`make backfill` discovers the 2024 and 2025 race calendars and builds missing archives. It batches the dimension/timing endpoints across session keys, then downloads a bounded GPS/telemetry window for each race. OpenF1 can temporarily require authentication even for historical sessions while a live session is running. The pipeline supports a bearer token via the process-only `OPENF1_ACCESS_TOKEN` environment variable. It does not store credentials or bypass provider access controls. If GPS extraction returns 401/403 and session timing is already cached, it emits a clearly marked timing-only read model; rerunning upgrades these sessions after access returns. It respects the public API request budget, retries transient errors, skips completed GPS read models, and records failures in ignored `data/backfill-failures.json` for repair. Re-running resumes from the cache and completed exports.
+
+Each new excerpt starts 15 seconds before a valid reference lap from lap 8 onward. The exporter reconstructs the circuit from a complete measured lap with no GPS gap over five seconds. This uses actual lap timestamps, including delayed or restarted races, rather than assuming a fixed offset from scheduled start. Retired participants remain in the driver dimension and timing tower even if they have no GPS in the excerpt.
+
+`make pipeline SESSION=<key>` explicitly rebuilds a single catalogued race. Follow it with `make warehouse`, `make transform` and `make test`. The UI reads `dist/data/session-catalog.json`; session IDs, years, rounds, venues and participant line-ups are data driven. The Airflow session enum follows the same catalog.
+
+To extend to another year, update `pipeline/catalog.py` and its calendar contract, discover races via the [OpenF1 API reference](https://openf1.org/docs/), and run the same workflow. For full-race GPS replay, extract GPS and telemetry in bounded time chunks, deduplicate `(driver_number, date)`, then update excerpt duration and related tests. The current product intentionally publishes eight-minute excerpts per Grand Prix; Sprint, practice and qualifying sessions are excluded.
 
 ## Exercises
 
@@ -57,4 +59,8 @@ The Site does not run an Airflow scheduler or a Python process. Newly exported f
 
 ## Validation scope
 
-Node tests cover binary seeking, GPS interpolation, gaps and session-time lap/tyre selection. Python checks cover both bundled archives. dbt checks cover lap keys, required fields, positive durations and telemetry domains. Browser QA covers 3D rendering, playback, cameras, driver selection, both sessions, telemetry comparisons, exports and mobile layout. Airflow DAG parsing is checked separately; running a scheduler is an optional local exercise.
+Node tests cover binary seeking, GPS interpolation, gaps and session-time lap/tyre selection. Python checks cover all 48 bundled archives. dbt checks cover lap keys, required fields, positive durations and telemetry domains. Browser QA covers 3D rendering, playback, cameras, driver selection, all 48 race selections, telemetry comparisons, exports and mobile layout. Airflow DAG parsing is checked separately; running a scheduler is an optional local exercise.
+
+## Upstream completeness
+
+A full-session endpoint query can still contain missing laps or retired participants. Charts retain the recorded lap numbers and leave unobserved regions empty. Missing durations are null and never replaced with plausible values. The bundled 2025 Miami timing feed, for example, begins partway through the race; available coverage and valid-lap counts should be considered when comparing pace.

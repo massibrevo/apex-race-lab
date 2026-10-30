@@ -1,5 +1,5 @@
 SESSION ?= 9590
-.PHONY: setup dev pipeline warehouse transform test
+.PHONY: setup dev pipeline backfill warehouse transform test
 setup:
 	python3 -m venv .venv
 	.venv/bin/pip install -r requirements-lock.txt
@@ -9,6 +9,9 @@ dev:
 
 pipeline:
 	.venv/bin/python pipeline/export.py --session $(SESSION)
+
+backfill:
+	.venv/bin/python pipeline/build_archive.py
 
 warehouse:
 	.venv/bin/python pipeline/warehouse.py

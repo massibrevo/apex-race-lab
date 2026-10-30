@@ -12,3 +12,7 @@ dbt/logs/
 
 .venv-airflow/
 .airflow/
+
+data/backfill-failures.json
+data/fastf1-cache/
+data/warehouse-stage-*/

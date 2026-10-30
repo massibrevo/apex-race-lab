@@ -1,5 +1,5 @@
 """Airflow 3 DAG. Run manually with a mounted checkout and its pipeline venv."""
-import os
+import os, json
 from datetime import datetime, timezone
 from pathlib import Path
 from airflow.sdk import DAG, Param
@@ -7,8 +7,9 @@ from airflow.providers.standard.operators.bash import BashOperator
 ROOT=Path(os.environ.get('APEX_ROOT','/opt/airflow/apex'))
 PYTHON=ROOT/'.venv/bin/python'
 DBT=ROOT/'.venv/bin/dbt'
+SESSION_KEYS=[s['key'] for s in json.loads((Path(__file__).resolve().parents[1]/'dist/data/session-catalog.json').read_text())['sessions']]
 with DAG('apex_archive',start_date=datetime(2024,1,1,tzinfo=timezone.utc),schedule=None,catchup=False,
-         params={'session':Param(9590,type='integer',enum=[9590,9558])},max_active_runs=1,
+         params={'session':Param(9590,type='integer',enum=SESSION_KEYS)},max_active_runs=1,
          tags=['f1','portfolio','data-engineering']) as dag:
     export=BashOperator(task_id='ingest_validate_export',bash_command=f'{PYTHON} pipeline/export.py --session "$APEX_SESSION"',cwd=str(ROOT),env={'APEX_SESSION':'{{ params.session }}'},append_env=True,retries=2)
     warehouse=BashOperator(task_id='build_warehouse',bash_command=f'{PYTHON} pipeline/warehouse.py',cwd=str(ROOT))

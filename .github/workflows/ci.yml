@@ -17,6 +17,7 @@ jobs:
       - run: python pipeline/warehouse.py
       - run: cd dbt && dbt build --profiles-dir .
       - run: python pipeline/publish.py
+      - run: python -m unittest discover -s tests -p 'test_*.py'
   airflow-dag:
     runs-on: ubuntu-latest
     steps:
@@ -28,4 +29,4 @@ jobs:
       - name: Parse DAG and verify dependency chain
         env:
           AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
-        run: python -c 'import runpy; d=runpy.run_path("dags/apex_archive.py")["dag"]; assert len(d.tasks)==5; assert d.get_task("publish_gold").upstream_task_ids == {"dbt_build_and_test"}'
+        run: python -c 'import runpy; module=runpy.run_path("dags/apex_archive.py"); d=module["dag"]; assert len(module["SESSION_KEYS"])==48; assert len(d.tasks)==5; assert d.get_task("publish_gold").upstream_task_ids == {"dbt_build_and_test"}'

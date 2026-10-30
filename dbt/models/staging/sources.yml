@@ -6,3 +6,4 @@ sources:
       - name: laps
       - name: telemetry
       - name: drivers
+      - name: sessions
