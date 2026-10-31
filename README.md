@@ -93,3 +93,7 @@ The supplied `.openai/hosting.json` identifies this Site. Forks should remove `p
 ## Attribution and rights
 
 Application code is MIT licensed. Three.js retains its included MIT license. OpenF1 is an independent data provider and describes its platform/data use for educational, research and non-commercial fan engagement; see [OpenF1 terms and attribution](https://openf1.org/) and [CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/). Bundled F1 data is attributed to OpenF1 and is not relicensed as MIT. This is an independent educational project, unaffiliated with Formula 1, FIA or any team. Team and driver names identify recorded participants; no official logos are included.
+
+## Contributing and agent workflows
+
+Start with [CONTRIBUTING.md](CONTRIBUTING.md) and [AGENTS.md](AGENTS.md). Scoped instructions cover the application, recorded archives, Python pipeline, dbt, Airflow, tests and CI. Four repository skills in [.agents/skills](.agents/skills) guide data changes, replay UI work, PR review and Sites publication. Run `make guidance` to validate skill discovery metadata and local instruction links. Pull requests use the versioned template and must pass current-head CI before an authorized merge.
