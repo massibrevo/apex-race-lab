@@ -8,3 +8,5 @@ Follow the root instructions and [replay UI skill](../.agents/skills/apex-replay
 - Derive participants, circuit orientation and availability from the selected archive. Timing-only sessions must open usable analysis, disable unavailable controls and explain missing GPS.
 - Check keyboard controls, selection semantics, readable labels, narrow-screen overflow, reduced motion and WebGL fallback when the change affects them.
 - Do not manually rewrite generated data as a UI fix. See [data instructions](data/AGENTS.md).
+
+The entry script URL carries a short SHA-256 revision of `app.js`; refresh that query value when changing the entry script so existing clients load the new code. The small session catalog bypasses browser storage and race archives revalidate on selection to avoid stale timing-only availability after a release.
