@@ -25,6 +25,18 @@ def refresh_availability(catalog):
         s['timing_available']=(ROOT/'dist/data'/f"{s['key']}.json").exists()
     (ROOT/'dist/data/session-catalog.json').write_text(json.dumps({'schema_version':1,'sessions':catalog},separators=(',',':')))
 
+def select_reference(laps):
+    """Use an observed clean lap, even when early-race timing is missing."""
+    candidates=[lap for lap in laps if lap.get('date_start')
+                and lap.get('lap_number',0)>=8
+                and isinstance(lap.get('lap_duration'),(int,float))
+                and 45<lap['lap_duration']<200
+                and not lap.get('is_pit_out_lap')]
+    preferred={16:0,44:1,1:2,4:3}
+    if not candidates:
+        raise ValueError('No valid recorded reference lap from lap 8 onward')
+    return min(candidates,key=lambda lap:(preferred.get(lap['driver_number'],4),lap['lap_number']))
+
 def build(keys=None):
     catalog_path=ROOT/'dist/data/session-catalog.json'
     catalog=json.loads(catalog_path.read_text())['sessions'] if catalog_path.exists() else discover()
@@ -51,9 +63,7 @@ def build(keys=None):
                 export_timing(s,'HTTP 401: historical API access is temporarily restricted');failures.append({'session':s,'error':'Upstream authentication required'});continue
             print(f"BUILD {index}/{len(selected)} {s['year']} {s['name']} [{s['key']}]",flush=True)
             laps=fetch('laps',{'session_key':s['key']},ROOT/'data/bronze'/str(s['key']))
-            candidates=[l for l in laps if l.get('date_start') and 8<=l['lap_number']<=20 and l.get('lap_duration') and 45<l['lap_duration']<200 and not l.get('is_pit_out_lap')]
-            reference=next((l for n in (16,44,1,4) for l in sorted(candidates,key=lambda x:x['lap_number']) if l['driver_number']==n),None)
-            if not reference:raise ValueError('No complete reference lap for excerpt selection')
+            reference=select_reference(laps)
             start=datetime.fromtimestamp(epoch(reference['date_start'])-15,timezone.utc);end=start+timedelta(seconds=480)
             export(s['key'],start.isoformat(),end.isoformat(),s['name'],s['country'],s['code'],None,max(l['lap_number'] for l in laps),year=s['year'],circuit=s['circuit'],round_no=s['round'])
         except HTTPError as exc:
