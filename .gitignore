@@ -16,3 +16,6 @@ dbt/logs/
 data/backfill-failures.json
 data/fastf1-cache/
 data/warehouse-stage-*/
+
+# Local desktop services, snapshots, credentials and launchers.
+/local/

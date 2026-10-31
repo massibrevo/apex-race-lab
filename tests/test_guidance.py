@@ -28,6 +28,10 @@ class GuidanceContract(unittest.TestCase):
     def test_missing_root_instructions_is_rejected(self):
         (self.root/'AGENTS.md').unlink()
         self.assertTrue(guidance.validate(self.root)[0])
+    def test_machine_local_instructions_are_not_discovered(self):
+        local=self.root/'local/runtime';local.mkdir(parents=True)
+        (local/'AGENTS.md').write_text('[Runtime artifact](missing.md)')
+        self.assertEqual(guidance.validate(self.root)[0],[])
     def test_code_examples_are_not_treated_as_links(self):
         (self.root/'AGENTS.md').write_text('```md\n[Example](nonexistent.md)\n```\n[External](https://example.com/)')
         self.assertEqual(guidance.validate(self.root)[0],[])
