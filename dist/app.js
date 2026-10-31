@@ -89,7 +89,7 @@ function showSeason(year,preferred){
 async function loadSession(key){
  const version=++loadVersion;playing=false;$('status').textContent='Loading measured race data…';$('session').disabled=true;$('season').disabled=true;
  try{
-  const response=await fetch(`data/${key}.json`);if(!response.ok)throw Error('Archive could not be loaded');const incoming=await response.json();
+  const response=await fetch(`data/${key}.json`,{cache:'no-cache'});if(!response.ok)throw Error('Archive could not be loaded');const incoming=await response.json();
   if(incoming.schema_version!==1||!incoming.drivers?.length)throw Error('Invalid archive');if(version!==loadVersion)return;
   data=incoming;t=60;const hasReplay=!!data.track.length;const entry=catalog.find(s=>s.key===data.session.key);
   selected=String(data.drivers.find(d=>d.driver_number===16&&(!hasReplay||data.gps[d.driver_number]?.length))?.driver_number??data.drivers.find(d=>data.gps[d.driver_number]?.length&&data.telemetry[d.driver_number]?.length)?.driver_number??data.drivers[0].driver_number);
@@ -110,7 +110,7 @@ async function loadSession(key){
  finally{if(version===loadVersion){$('session').disabled=false;$('season').disabled=false;}}
 }
 async function initArchive(){
- try{const response=await fetch('data/session-catalog.json');if(!response.ok)throw Error('Race calendar unavailable');const archive=await response.json();catalog=archive.sessions;
+ try{const response=await fetch('data/session-catalog.json',{cache:'no-store'});if(!response.ok)throw Error('Race calendar unavailable');const archive=await response.json();catalog=archive.sessions;
   if(!Array.isArray(catalog)||!catalog.length)throw Error('Empty race calendar');
   $('archive-count').textContent=`${catalog.length} GRAND PRIX · ${catalog.filter(s=>s.replay_available!==false).length} REPLAYS`;
   const requested=Number(new URL(location.href).searchParams.get('session')),initial=catalog.find(s=>s.key===requested)||catalog.find(s=>s.key===9590)||catalog[0];

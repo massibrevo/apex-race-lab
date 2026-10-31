@@ -29,7 +29,7 @@ Three.js is vendored with its MIT license. Node 22+ runs the replay tests. `npm 
 
 ### What is recorded
 
-The archive includes **all 48 Grands Prix: 24 in 2024 and 24 in 2025**. Use the season and race selectors to browse each calendar. Every race has recorded session lap timing; the 2024 races also have eight-minute measured GPS/telemetry excerpts. [Complete race list](docs/archive.md).
+The archive includes **all 48 Grands Prix: 24 in 2024 and 24 in 2025**. Use the season and race selectors to browse each calendar. Every race has recorded session lap timing and an eight-minute measured GPS/telemetry excerpt. [Complete race list](docs/archive.md).
 
 Available GPS replays contain **eight-minute excerpts, not complete race GPS replays**. Each archive uses the actual race participants; retired cars and gaps can have no current measurement. Approximately 1 Hz samples are exported from the higher-frequency OpenF1 feed. GPS is linearly interpolated only across gaps ≤5 seconds. Telemetry uses the latest valid sample ≤5 seconds old. Race positions use the latest recorded position event. There is no simulated telemetry, lap-based car positioning, live feed, or invented timing gap.
 
@@ -48,7 +48,7 @@ make transform              # dbt views, driver pace mart, contract tests -> gol
 make test                   # replay behavior and all 48 archive contracts
 ```
 
-**Current replay coverage:** all 24 races from 2024 have measured GPS/car telemetry. All 24 races from 2025 have recorded session lap timing, driver comparisons and CSV exports; their GPS replay downloads are pending upstream access. The UI labels timing-only races and opens their analysis view, rather than showing a fabricated replay. `make backfill` retries timing-only races and upgrades them when the public API becomes accessible again.
+**Current replay coverage:** all 48 races from 2024 and 2025 have measured GPS/car telemetry excerpts, recorded lap timing, driver comparisons and CSV exports. The UI labels timing-only races and opens their analysis view, rather than showing a fabricated replay. `make backfill` retries timing-only races and upgrades them when the public API becomes accessible again.
 
 OpenF1 temporarily restricts even historical downloads during live sessions. Optional authenticated ingestion reads `OPENF1_ACCESS_TOKEN` from the process environment; credentials are never written to source files. FastF1's upstream archive also currently requires authentication, so this release does not rely on that fallback.
 

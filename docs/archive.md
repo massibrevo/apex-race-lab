@@ -1,6 +1,6 @@
 # Race archive
 
-All 48 Grands Prix from 2024 and 2025. Every race includes recorded session lap timing. All 2024 races also include an eight-minute measured GPS/telemetry excerpt. The 2025 GPS downloads are pending upstream access. Sprint sessions are excluded.
+All 48 Grands Prix from 2024 and 2025. Every race includes recorded session lap timing. Every 2024 and 2025 race also includes an eight-minute measured GPS/telemetry excerpt. Sprint sessions are excluded.
 
 ## 2024 · GPS replay + lap timing
 
@@ -31,7 +31,7 @@ All 48 Grands Prix from 2024 and 2025. Every race includes recorded session lap 
 | 23 | Qatar Grand Prix | Lusail | 2024-12-01 | 9655 |
 | 24 | Abu Dhabi Grand Prix | Yas Marina Circuit | 2024-12-08 | 9662 |
 
-## 2025 · lap timing; GPS pending
+## 2025 · GPS replay + lap timing
 
 | Round | Grand Prix | Circuit | Race date | Session key |
 |---:|---|---|---|---:|
