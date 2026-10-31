@@ -1,5 +1,5 @@
 SESSION ?= 9590
-.PHONY: setup dev pipeline backfill warehouse transform test
+.PHONY: setup dev pipeline backfill warehouse transform test guidance
 setup:
 	python3 -m venv .venv
 	.venv/bin/pip install -r requirements-lock.txt
@@ -23,3 +23,7 @@ transform:
 test:
 	node --test tests/*.test.js
 	.venv/bin/python -m unittest discover -s tests -p 'test_*.py'
+
+guidance:
+	.venv/bin/python scripts/check_agent_guidance.py
+	.venv/bin/python -m unittest discover -s tests -p 'test_guidance.py'
