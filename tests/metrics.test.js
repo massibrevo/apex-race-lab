@@ -1,0 +1,9 @@
+import test from 'node:test';import assert from 'node:assert/strict';
+import {driverMetrics,median,referenceTrace} from '../dist/metrics.js';
+const lap=(driver_number,lap_number,lap_duration,extra={})=>({driver_number,lap_number,lap_duration,...extra});
+const data={session:{duration:20,start:'2026-01-01T00:00:00Z'},laps:[lap(1,1,90),lap(1,2,92),lap(1,3,150,{is_pit_out_lap:true}),lap(2,1,91),lap(2,2,90)],telemetry:{1:[[0,200,100,0],[2,210,50,100],[4,220,100,0],[15,250,100,0],[20,260,100,0]]}};
+test('matches identical lap numbers and excludes pit-out laps',()=>{const m=driverMetrics(data,1,2);assert.equal(m.delta,.5);assert.equal(m.consistency,1);assert.equal(m.laps,2);assert.equal(m.theoretical,null);assert.equal(m.matched.length,2);});
+test('time weights inputs and excludes gaps over five seconds',()=>{const m=driverMetrics(data,1,2);assert.equal(m.observed,9);assert.equal(m.coverage,45);assert.ok(Math.abs(m.fullThrottle-700/9)<1e-8);assert.ok(Math.abs(m.braking-200/9)<1e-8);});
+test('missing sensors, sectors and comparison remain unavailable',()=>{const m=driverMetrics(data,99,1);assert.equal(m.delta,null);assert.equal(m.topSpeed,null);assert.equal(m.braking,null);assert.equal(m.consistency,null);assert.equal(m.coverage,0);assert.equal(median([]),null);});
+test('sector potential requires all three recorded sectors',()=>{const d={...data,laps:[lap(1,1,90,{duration_sector_1:30,duration_sector_2:31,duration_sector_3:29}),lap(1,2,92,{duration_sector_1:29,duration_sector_2:32,duration_sector_3:31})]};const m=driverMetrics(d,1,2);assert.equal(m.theoretical,89);assert.equal(m.potential,1);});
+test('reference overlay matches measured reference coordinates and respects staleness',()=>{const d={...data,provenance:{track_driver:1,track_lap:1},track:[[10,20],[11,21]],gps:{1:[[0,10,20,0],[10,11,21,0]]},laps:[lap(1,1,90,{date_start:data.session.start})]};assert.equal(referenceTrace(d)[0][1],200);assert.equal(referenceTrace(d)[1],null);});

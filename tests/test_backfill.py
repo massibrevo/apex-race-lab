@@ -19,4 +19,12 @@ class ReferenceWindow(unittest.TestCase):
     def test_missing_timing_is_not_fabricated(self):
         missing=lap(8);missing['lap_duration']=None
         with self.assertRaises(ValueError):select_reference([lap(1),missing])
+class OptionalSensors(unittest.TestCase):
+    def test_missing_drs_preserves_measured_speed_and_inputs(self):
+        from export import compact
+        rows=[dict(date='2026-01-01T00:00:00Z',driver_number=16,speed=250,throttle=100,brake=0,n_gear=7,rpm=10000,drs=None)]
+        result=compact(rows,1767225600,['speed','throttle','brake','n_gear','rpm','drs'])
+        self.assertEqual(result['16'][0],[0,250,100,0,7,10000,None])
+        rows[0]['speed']=None
+        self.assertEqual(compact(rows,1767225600,['speed','throttle','brake','n_gear','rpm','drs']),{'16':[]})
 if __name__=='__main__':unittest.main()

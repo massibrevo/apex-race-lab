@@ -29,7 +29,7 @@ Three.js is vendored with its MIT license. Node 22+ runs the replay tests. `npm 
 
 ### What is recorded
 
-The archive includes **all 48 Grands Prix: 24 in 2024 and 24 in 2025**. Use the season and race selectors to browse each calendar. Every race has recorded session lap timing and an eight-minute measured GPS/telemetry excerpt. [Complete race list](docs/archive.md).
+The archive includes **67 timing archives: all 24 races in 2024, all 24 in 2025, and 19 completed 2026 races as of 4 November 2026**. Use the season and race selectors to browse each calendar. Every race has recorded session lap timing; 66 include an eight-minute measured GPS/telemetry excerpt. The 2026 Monaco GPS request returned HTTP 404 and is explicitly timing-only. [Complete race list](docs/archive.md).
 
 Available GPS replays contain **eight-minute excerpts, not complete race GPS replays**. Each archive uses the actual race participants; retired cars and gaps can have no current measurement. Approximately 1 Hz samples are exported from the higher-frequency OpenF1 feed. GPS is linearly interpolated only across gaps ≤5 seconds. Telemetry uses the latest valid sample ≤5 seconds old. Race positions use the latest recorded position event. There is no simulated telemetry, lap-based car positioning, live feed, or invented timing gap.
 
@@ -42,13 +42,13 @@ Use **Python 3.12**, Node 22 and Make. The analytical stack runs locally or in y
 ```bash
 make setup
 make pipeline SESSION=9590  # OpenF1 -> cached bronze JSON -> validated compact read model
-make backfill               # discover and build any missing 2024/2025 race archives
+make backfill               # build missing archives from the discovered calendar
 make warehouse              # read models -> DuckDB bronze tables
 make transform              # dbt views, driver pace mart, contract tests -> gold enrichment
-make test                   # replay behavior and all 48 archive contracts
+make test                   # replay behavior and all bundled archive contracts
 ```
 
-**Current replay coverage:** all 48 races from 2024 and 2025 have measured GPS/car telemetry excerpts, recorded lap timing, driver comparisons and CSV exports. The UI labels timing-only races and opens their analysis view, rather than showing a fabricated replay. `make backfill` retries timing-only races and upgrades them when the public API becomes accessible again.
+**Current replay coverage:** 66 measured GPS/car telemetry excerpts across 2024–2026, plus timing-only 2026 Monaco. All 67 archives support recorded lap analysis, driver comparisons and CSV exports. The UI labels timing-only races and opens their analysis view, rather than showing a fabricated replay. `make backfill` retries timing-only races and upgrades them when the public API becomes accessible again.
 
 OpenF1 temporarily restricts even historical downloads during live sessions. Optional authenticated ingestion reads `OPENF1_ACCESS_TOKEN` from the process environment; credentials are never written to source files. FastF1's upstream archive also currently requires authentication, so this release does not rely on that fallback.
 
@@ -97,3 +97,10 @@ Application code is MIT licensed. Three.js retains its included MIT license. Ope
 ## Contributing and agent workflows
 
 Start with [CONTRIBUTING.md](CONTRIBUTING.md) and [AGENTS.md](AGENTS.md). Scoped instructions cover the application, recorded archives, Python pipeline, dbt, Airflow, tests and CI. Four repository skills in [.agents/skills](.agents/skills) guide data changes, replay UI work, PR review and Sites publication. Run `make guidance` to validate skill discovery metadata and local instruction links. Pull requests use the versioned template and must pass current-head CI before an authorized merge.
+
+
+### Performance engineering portfolio
+
+The Performance desk provides eight explainable KPIs, a driver benchmark and a downloadable engineering brief. The 3D circuit has measured reference-lap speed/braking lenses with an explicit source and missing-sample colour. A holographic plinth adds depth without claiming surveyed geometry.
+
+Use the brief to present an engineering investigation: state a hypothesis, compare matched laps, identify confounders and reproduce the result from the pipeline. Pace and sector metrics are descriptive; they are not fuel-, tyre-age-, traffic- or weather-corrected. This project demonstrates data-product judgement and reproducibility without claiming professional team access. [Metric definitions and limitations](docs/engineering.md#performance-desk-and-2026-sensor-contract).

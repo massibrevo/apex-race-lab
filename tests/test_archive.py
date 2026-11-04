@@ -5,11 +5,16 @@ class ArchiveContract(unittest.TestCase):
     @classmethod
     def setUpClass(cls):cls.catalog=json.loads((ROOT/'dist/data/session-catalog.json').read_text())['sessions']
     def test_complete_calendars(self):
-        self.assertEqual(len(self.catalog),48)
-        self.assertEqual(len({s['key'] for s in self.catalog}),48)
+        self.assertGreaterEqual(len(self.catalog),48)
+        self.assertEqual(len({s['key'] for s in self.catalog}),len(self.catalog))
         for year in (2024,2025):
             races=[s for s in self.catalog if s['year']==year]
             self.assertEqual([s['round'] for s in races],list(range(1,25)))
+        for race in self.catalog:
+            self.assertIn(race['year'],(2024,2025,2026))
+            if race['year']==2026:
+                from datetime import datetime,timezone
+                self.assertLess(datetime.fromisoformat(race['scheduled_start']),datetime.now(timezone.utc))
     def test_all_bundled_sessions(self):
         for session in self.catalog:
             key=session['key']
@@ -20,6 +25,7 @@ class ArchiveContract(unittest.TestCase):
                 self.assertGreaterEqual(len(d['drivers']),18)
                 if d['session'].get('replay_available',bool(d['track'])):
                     self.assertGreaterEqual(len(d['gps']),10)
+                    self.assertGreaterEqual(len(d['telemetry']),10)
                     self.assertGreater(len(d['track']),40)
                 else:
                     self.assertEqual(d['track'],[])
@@ -38,7 +44,7 @@ class ArchiveContract(unittest.TestCase):
                     for n,rows in d[source].items():
                         self.assertIn(n,participants)
                         self.assertTrue(all(b[0]>a[0] for a,b in zip(rows,rows[1:])))
-                        self.assertTrue(all(math.isfinite(v) for r in rows for v in r))
+                        self.assertTrue(all(math.isfinite(v) if v is not None else source=='telemetry' and i==6 for r in rows for i,v in enumerate(r)))
                         self.assertTrue(all(0<=r[0]<=480 for r in rows))
                 for rows in d['telemetry'].values():
                     for r in rows:
