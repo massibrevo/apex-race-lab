@@ -12,7 +12,9 @@ models:
       - name: lap_number
         tests: [not_null]
   - name: driver_pace
-    description: Descriptive full-race pace excluding pit out laps. Not fuel or weather adjusted.
+    description: Descriptive full-race pace excluding pit out laps. Not fuel or weather adjusted. Includes population lap spread and independent best sectors.
     columns:
       - name: fastest_lap_seconds
+        tests: [not_null]
+      - name: lap_stddev_seconds
         tests: [not_null]

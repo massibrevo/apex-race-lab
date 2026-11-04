@@ -2,7 +2,7 @@
 
 ## Data contracts
 
-OpenF1 supplies recorded timing and metadata for all 48 races. Eight-minute measured GPS/car telemetry excerpts are bundled for all 2024 and 2025 races. Every read model declares `session.replay_available`. A timing-only archive contains empty GPS, telemetry and track fields plus an explicit availability reason; the viewer opens lap analysis and disables unavailable replay controls. An archive has `schema_version: 1`, session metadata, driver dimensions, one circuit reference lap, GPS samples, telemetry samples, race position events, full-session laps, stints, race-control events and a provenance block.
+The archive includes 67 recorded timing sessions: all 48 races in 2024/2025 and 19 completed 2026 races as of 4 November 2026. There are 66 eight-minute measured GPS/car telemetry excerpts; 2026 Monaco is timing-only because its GPS request returned HTTP 404. Every read model declares `session.replay_available`. A timing-only archive contains empty GPS, telemetry and track fields plus an explicit availability reason; the viewer opens lap analysis and disables unavailable replay controls. An archive has `schema_version: 1`, session metadata, driver dimensions, one circuit reference lap, GPS samples, telemetry samples, race position events, full-session laps, stints, race-control events and a provenance block.
 
 GPS rows are `[elapsed_seconds, x, y, z]`. Car telemetry rows are `[elapsed_seconds, speed_kmh, throttle_percent, brake_percent, gear, rpm, drs]`. Driver-number strings key each sampled series. All times are relative to the ISO 8601 UTC excerpt start. Coordinates use OpenF1's coordinate system; the renderer translates and uniformly scales them into scene units. The visual does not claim surveyed track geometry or real elevation.
 
@@ -30,7 +30,7 @@ To explore:
 
 ## Airflow 3 orchestration
 
-The manual DAG in `dags/apex_archive.py` uses Airflow's SDK and standard BashOperator provider. It runs ingest/export → warehouse load → dbt build/tests → gold publication → archive contract validation. Session selection is a typed enum generated from the complete 48-race catalog, passed through a quoted environment variable. Failed ingestion retries twice; the HTTP client has bounded retry/backoff internally. No production schedule is configured.
+The manual DAG in `dags/apex_archive.py` uses Airflow's SDK and standard BashOperator provider. It runs ingest/export → warehouse load → dbt build/tests → gold publication → archive contract validation. Session selection is a typed enum generated from the bundled session catalog, passed through a quoted environment variable. Failed ingestion retries twice; the HTTP client has bounded retry/backoff internally. No production schedule is configured.
 
 Install Airflow in a **separate Python 3.12 environment** using the official version constraints, as documented in [Airflow installation](https://airflow.apache.org/docs/apache-airflow/stable/installation/index.html). Pin Airflow 3.3.2 and its matching Python 3.12 constraint file. Include `apache-airflow-providers-standard`. Do not install Airflow into the dbt environment because its dependency constraints differ.
 
@@ -40,7 +40,7 @@ The Site does not run an Airflow scheduler or a Python process. Newly exported f
 
 ## Rebuild seasons or add another session
 
-`make backfill` discovers the 2024 and 2025 race calendars and builds missing archives. It batches the dimension/timing endpoints across session keys, then downloads a bounded GPS/telemetry window for each race. OpenF1 can temporarily require authentication even for historical sessions while a live session is running. The pipeline supports a bearer token via the process-only `OPENF1_ACCESS_TOKEN` environment variable. It does not store credentials or bypass provider access controls. If GPS extraction returns 401/403 and session timing is already cached, it emits a clearly marked timing-only read model; rerunning upgrades these sessions after access returns. It respects the public API request budget, retries transient errors, skips completed GPS read models, and records failures in ignored `data/backfill-failures.json` for repair. Re-running resumes from the cache and completed exports.
+`make backfill` discovers the 2024, 2025 and 2026 race calendars and builds missing archives. It batches the dimension/timing endpoints across session keys, then downloads a bounded GPS/telemetry window for each race. OpenF1 can temporarily require authentication even for historical sessions while a live session is running. The pipeline supports a bearer token via the process-only `OPENF1_ACCESS_TOKEN` environment variable. It does not store credentials or bypass provider access controls. If GPS extraction returns 401/403 and session timing is already cached, it emits a clearly marked timing-only read model; rerunning upgrades these sessions after access returns. It respects the public API request budget, retries transient errors, skips completed GPS read models, and records failures in ignored `data/backfill-failures.json` for repair. Re-running resumes from the cache and completed exports.
 
 Each new excerpt starts 15 seconds before a valid reference lap from lap 8 onward. There is no lap-20 cutoff: a source that begins later in the race uses its first suitable observed lap instead of inventing earlier coverage. The exporter reconstructs the circuit from a complete measured lap with no GPS gap over five seconds. This uses actual lap timestamps, including delayed or restarted races, rather than assuming a fixed offset from scheduled start. Retired participants remain in the driver dimension and timing tower even if they have no GPS in the excerpt.
 
@@ -59,8 +59,21 @@ To extend to another year, update `pipeline/catalog.py` and its calendar contrac
 
 ## Validation scope
 
-Node tests cover binary seeking, GPS interpolation, gaps and session-time lap/tyre selection. Python checks cover all 48 bundled archives. dbt checks cover lap keys, required fields, positive durations and telemetry domains. Browser QA covers 3D rendering, playback, cameras, driver selection, all 48 race selections, telemetry comparisons, exports and mobile layout. Airflow DAG parsing is checked separately; running a scheduler is an optional local exercise.
+Node tests cover binary seeking, GPS interpolation, gaps and session-time lap/tyre selection. Python checks cover every bundled archive. dbt checks cover lap keys, required fields, positive durations and telemetry domains. Browser QA covers 3D rendering, playback, cameras, driver selection, season and race selections, telemetry comparisons, exports and mobile layout. Airflow DAG parsing is checked separately; running a scheduler is an optional local exercise.
 
 ## Upstream completeness
 
 A full-session endpoint query can still contain missing laps or retired participants. Charts retain the recorded lap numbers and leave unobserved regions empty. Missing durations are null and never replaced with plausible values. The bundled 2025 Miami timing feed, for example, begins partway through the race; available coverage and valid-lap counts should be considered when comparing pace.
+
+
+## Performance desk and 2026 sensor contract
+
+The browser exposes median pace, same-lap median delta, population lap standard deviation, independent best-sector sum/potential, peak excerpt speed, full-throttle time (≥95%), braking time (>0) and input coverage. Timed intervals must be positive and at most five seconds; the last sample is not extrapolated. Sensor proportions use observed time, not all 480 seconds. Missing metrics remain null. `dist/metrics.js` is pure and regression-tested. The dbt pace mart independently publishes population lap spread and the three best observed sectors; SQL tests enforce bounds.
+
+The 2026 source returns null DRS measurements. Export retains those nulls while preserving the measured speed, throttle, brake, gear and RPM. It does not invent a DRS/active-aero/energy-deployment signal. Only this explicitly optional sensor may be null inside compact telemetry rows; core sensor fields must remain finite.
+
+Circuit lenses colour the reconstructed reference lap from its driver's time-aligned measured speed or brake inputs. The legend identifies the reference driver/lap; grey means no fresh sample. They do not represent the selected driver's entire race. Surface colours interpolate between sampled vertices. The plinth, supports and surrounding buildings are illustrative. Reduced motion disables the pulsing selection ring and CSS motion.
+
+2026 discovery refreshes the active season's API metadata once per UTC day and includes only non-cancelled sessions whose source end time has passed. Displayed event indices follow included source chronology, rather than claiming official championship round numbering after cancellations. Source meeting and circuit labels are retained. Future races are not represented as recordings. Refresh the calendar with `python pipeline/catalog.py`, then `make backfill`, `make warehouse`, `make transform` and `make test` to extend the release.
+
+The downloaded engineering brief records the current comparison, metrics, sample coverage, methodology and investigation prompts. It is a starting point for a reproducible case study: investigate matched tyre-age stints and neutralisations before making performance claims. No fuel/traffic/weather adjustments or causal driver ranking are implemented.

@@ -23,7 +23,7 @@ def refresh_availability(catalog):
     for s in catalog:
         s['replay_available']=is_replay_ready(s['key'])
         s['timing_available']=(ROOT/'dist/data'/f"{s['key']}.json").exists()
-    (ROOT/'dist/data/session-catalog.json').write_text(json.dumps({'schema_version':1,'sessions':catalog},separators=(',',':')))
+    target=ROOT/'dist/data/session-catalog.json';temp=target.with_suffix('.tmp');temp.write_text(json.dumps({'schema_version':1,'sessions':catalog},separators=(',',':')));temp.replace(target)
 
 def select_reference(laps):
     """Use an observed clean lap, even when early-race timing is missing."""
@@ -40,7 +40,7 @@ def select_reference(laps):
 def build(keys=None):
     catalog_path=ROOT/'dist/data/session-catalog.json'
     catalog=json.loads(catalog_path.read_text())['sessions'] if catalog_path.exists() else discover()
-    if keys and set(keys)-{s['key'] for s in catalog}:raise ValueError('Requested session is not in the 2024/2025 Grand Prix catalog')
+    if keys and set(keys)-{s['key'] for s in catalog}:raise ValueError('Requested session is not in the completed Grand Prix catalog')
     selected=[s for s in catalog if keys is None or s['key'] in keys]
     missing=[s for s in selected if not is_replay_ready(s['key'])]
     uncached=[s for s in missing if not all(list((ROOT/'data/bronze'/str(s['key'])).glob(endpoint+'-*.json')) for endpoint in ENDPOINTS)]
@@ -71,6 +71,11 @@ def build(keys=None):
                 access_restricted=True
                 from timing_archive import export_timing
                 export_timing(s,str(exc));failures.append({'session':s,'error':str(exc)});print('TIMING ONLY: upstream authentication required',flush=True)
+            elif exc.code==404:
+                from timing_archive import export_timing
+                export_timing(s,'HTTP 404: requested GPS window is unavailable from OpenF1')
+                failures.append({'session':s,'error':str(exc)})
+                print('TIMING ONLY: GPS window not found at source',flush=True)
             else:
                 failures.append({'session':s,'error':str(exc)});traceback.print_exc()
         except Exception as exc:

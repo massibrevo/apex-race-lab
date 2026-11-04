@@ -15,7 +15,8 @@ def compact(rows, start, fields):
         dest = grouped.setdefault(n, [])
         if dest and t - dest[-1][0] < 0.9: continue
         values = [row.get(f) for f in fields]
-        if not all(isinstance(v,(float,int)) and math.isfinite(v) for v in values): continue
+        # DRS is absent in 2026 feeds; retain its null without discarding measured inputs.
+        if not all((f=='drs' and v is None) or (isinstance(v,(float,int)) and math.isfinite(v)) for f,v in zip(fields,values)): continue
         if fields[0] == 'speed' and not (0 <= values[0] <= 400 and 0 <= values[1] <= 100 and 0 <= values[2] <= 100 and 0 <= values[3] <= 8): continue
         dest.append([t] + values)
     return grouped

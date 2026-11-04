@@ -33,4 +33,4 @@ These are project workflow requirements. They do not change GitHub branch protec
 
 ## Data and release evidence
 
-Describe recorded coverage separately from the 48-race calendar. Retain the eight-minute GPS excerpt disclosure and explicit timing-only behavior. Do not imply all lap records are complete just because a session endpoint was queried. A release needs tested inputs, matching source/archive provenance and a successful production deployment; a GitHub merge alone does not publish Sites.
+Describe recorded coverage separately from the observed session calendar. Retain the eight-minute GPS excerpt disclosure and explicit timing-only behavior. Do not imply all lap records are complete just because a session endpoint was queried. A release needs tested inputs, matching source/archive provenance and a successful production deployment; a GitHub merge alone does not publish Sites.

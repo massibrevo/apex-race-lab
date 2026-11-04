@@ -45,4 +45,4 @@ jobs:
       - name: Parse DAG and verify dependency chain
         env:
           AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
-        run: python -c 'import runpy; module=runpy.run_path("dags/apex_archive.py"); d=module["dag"]; assert len(module["SESSION_KEYS"])==48; assert len(d.tasks)==5; assert d.get_task("publish_gold").upstream_task_ids == {"dbt_build_and_test"}'
+        run: python -c 'import runpy; module=runpy.run_path("dags/apex_archive.py"); d=module["dag"]; assert len(module["SESSION_KEYS"])>=48; assert len(module["SESSION_KEYS"])==len(set(module["SESSION_KEYS"])); assert len(d.tasks)==5; assert d.get_task("publish_gold").upstream_task_ids == {"dbt_build_and_test"}'

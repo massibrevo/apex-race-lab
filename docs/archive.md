@@ -1,6 +1,6 @@
 # Race archive
 
-All 48 Grands Prix from 2024 and 2025. Every race includes recorded session lap timing. Every 2024 and 2025 race also includes an eight-minute measured GPS/telemetry excerpt. Sprint sessions are excluded.
+All 48 Grands Prix from 2024 and 2025. Every race includes recorded session lap timing. Every 2024 and 2025 race also includes an eight-minute measured GPS/telemetry excerpt. Sprint sessions are excluded. The 2026 partial season is listed below; future and cancelled source sessions are excluded.
 
 ## 2024 · GPS replay + lap timing
 
@@ -59,3 +59,30 @@ All 48 Grands Prix from 2024 and 2025. Every race includes recorded session lap 
 | 22 | Las Vegas Grand Prix | Las Vegas | 2025-11-23 | 9858 |
 | 23 | Qatar Grand Prix | Lusail | 2025-11-30 | 9850 |
 | 24 | Abu Dhabi Grand Prix | Yas Marina Circuit | 2025-12-07 | 9839 |
+
+
+## 2026 · completed source sessions as of 4 November 2026
+
+18 measured GPS excerpts and 19 recorded timing archives. Monaco is timing-only: OpenF1 returned HTTP 404 for its GPS window. Event indices follow included source chronology; meeting/circuit labels are retained from the provider.
+
+| Index | Source Grand Prix | Source circuit | Race date | Session | GPS |
+|---:|---|---|---|---:|---|
+| 1 | Australian Grand Prix | Melbourne | 2026-03-08 | 11234 | Yes |
+| 2 | Chinese Grand Prix | Shanghai | 2026-03-15 | 11245 | Yes |
+| 3 | Japanese Grand Prix | Suzuka | 2026-03-29 | 11253 | Yes |
+| 4 | Miami Grand Prix | Miami | 2026-05-03 | 11280 | Yes |
+| 5 | Canadian Grand Prix | Montreal | 2026-05-24 | 11291 | Yes |
+| 6 | Monaco Grand Prix | Monte Carlo | 2026-06-07 | 11299 | Unavailable |
+| 7 | Barcelona Grand Prix | Catalunya | 2026-06-14 | 11307 | Yes |
+| 8 | Austrian Grand Prix | Spielberg | 2026-06-28 | 11315 | Yes |
+| 9 | British Grand Prix | Silverstone | 2026-07-05 | 11326 | Yes |
+| 10 | Belgian Grand Prix | Spa-Francorchamps | 2026-07-19 | 11334 | Yes |
+| 11 | Hungarian Grand Prix | Hungaroring | 2026-07-26 | 11342 | Yes |
+| 12 | Dutch Grand Prix | Zandvoort | 2026-08-23 | 11353 | Yes |
+| 13 | Italian Grand Prix | Monza | 2026-09-06 | 11361 | Yes |
+| 14 | Spanish Grand Prix | Madring | 2026-09-13 | 11369 | Yes |
+| 15 | Azerbaijan Grand Prix | Baku | 2026-09-26 | 11377 | Yes |
+| 16 | Bahrain Grand Prix | Kuala Lumpur | 2026-10-04 | 11731 | Yes |
+| 17 | Singapore Grand Prix | Singapore | 2026-10-11 | 11388 | Yes |
+| 18 | United States Grand Prix | Austin | 2026-10-25 | 11396 | Yes |
+| 19 | Mexico City Grand Prix | Mexico City | 2026-11-01 | 11404 | Yes |
