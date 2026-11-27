@@ -29,7 +29,7 @@ Three.js is vendored with its MIT license. Node 22+ runs the replay tests. `npm 
 
 ### What is recorded
 
-The archive includes **67 timing archives: all 24 races in 2024, all 24 in 2025, and 19 completed 2026 races as of 4 November 2026**. Use the season and race selectors to browse each calendar. Every race has recorded session lap timing; 66 include an eight-minute measured GPS/telemetry excerpt. The 2026 Monaco GPS request returned HTTP 404 and is explicitly timing-only. [Complete race list](docs/archive.md).
+The archive includes **69 timing archives: all 24 races in 2024, all 24 in 2025, and 21 completed 2026 races as of 27 November 2026**. Use the season and race selectors to browse each calendar. Every race has recorded session lap timing; 68 include an eight-minute measured GPS/telemetry excerpt. The 2026 Monaco GPS request returned HTTP 404 and is explicitly timing-only. [Complete race list](docs/archive.md).
 
 Available GPS replays contain **eight-minute excerpts, not complete race GPS replays**. Each archive uses the actual race participants; retired cars and gaps can have no current measurement. Approximately 1 Hz samples are exported from the higher-frequency OpenF1 feed. GPS is linearly interpolated only across gaps ≤5 seconds. Telemetry uses the latest valid sample ≤5 seconds old. Race positions use the latest recorded position event. There is no simulated telemetry, lap-based car positioning, live feed, or invented timing gap.
 
@@ -48,7 +48,7 @@ make transform              # dbt views, driver pace mart, contract tests -> gol
 make test                   # replay behavior and all bundled archive contracts
 ```
 
-**Current replay coverage:** 66 measured GPS/car telemetry excerpts across 2024–2026, plus timing-only 2026 Monaco. All 67 archives support recorded lap analysis, driver comparisons and CSV exports. The UI labels timing-only races and opens their analysis view, rather than showing a fabricated replay. `make backfill` retries timing-only races and upgrades them when the public API becomes accessible again.
+**Current replay coverage:** 68 measured GPS/car telemetry excerpts across 2024–2026, plus timing-only 2026 Monaco. All 69 archives support recorded lap analysis, driver comparisons and CSV exports. The UI labels timing-only races and opens their analysis view, rather than showing a fabricated replay. `make backfill` retries timing-only races and upgrades them when the public API becomes accessible again.
 
 OpenF1 temporarily restricts even historical downloads during live sessions. Optional authenticated ingestion reads `OPENF1_ACCESS_TOKEN` from the process environment; credentials are never written to source files. FastF1's upstream archive also currently requires authentication, so this release does not rely on that fallback.
 

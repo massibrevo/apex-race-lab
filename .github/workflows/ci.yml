@@ -32,6 +32,13 @@ jobs:
       - run: python pipeline/warehouse.py
       - run: cd dbt && dbt build --profiles-dir .
       - run: python pipeline/publish.py
+      - name: Build and test championship marts from the bundled feed
+        env:
+          APEX_CHAMPIONSHIP_DB: /tmp/apex-ci-championship.duckdb
+        run: |
+          python pipeline/championship_warehouse.py load "$APEX_CHAMPIONSHIP_DB" dist/data/championship.json
+          dbt build --project-dir dbt/championship --profiles-dir dbt/championship
+          python pipeline/championship_warehouse.py export "$APEX_CHAMPIONSHIP_DB" /tmp/apex-ci-championship.json
       - run: python -m unittest discover -s tests -p 'test_*.py'
   airflow-dag:
     runs-on: ubuntu-latest
@@ -46,3 +53,5 @@ jobs:
         env:
           AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
         run: python -c 'import runpy; module=runpy.run_path("dags/apex_archive.py"); d=module["dag"]; assert len(module["SESSION_KEYS"])>=48; assert len(module["SESSION_KEYS"])==len(set(module["SESSION_KEYS"])); assert len(d.tasks)==5; assert d.get_task("publish_gold").upstream_task_ids == {"dbt_build_and_test"}'
+      - name: Parse championship DAG
+        run: python -c 'import runpy; d=runpy.run_path("dags/apex_championship.py")["dag"]; assert d.max_active_runs == 1; assert len(d.tasks) == 4; assert d.get_task("publish_local_championship_snapshot").upstream_task_ids == {"build_and_test_championship"}'

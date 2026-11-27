@@ -1,0 +1,18 @@
+version: 2
+sources:
+  - name: openf1
+    schema: openf1
+    tables:
+      - name: standings
+      - name: race_calendar
+models:
+  - name: championship_standings
+    description: Published OpenF1 post-race totals, with points change and gap to the series leader.
+    columns:
+      - name: standing_id
+        data_tests: [not_null, unique]
+  - name: championship_races
+    description: OpenF1 race calendar and classified winners where delivered.
+    columns:
+      - name: session_key
+        data_tests: [not_null, unique]
