@@ -1,0 +1,7 @@
+name: apex_championship
+version: '1.0.0'
+config-version: 2
+profile: apex_championship
+models:
+  apex_championship:
+    +materialized: table

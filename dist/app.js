@@ -1,3 +1,4 @@
+import { openChampionship, closeChampionship } from './championship.js';
 import * as THREE from './vendor/three.module.js';
 import {sample,lapAt,stintAt,formatTime} from './replay.js';
 import {driverMetrics,referenceTrace} from './metrics.js';
@@ -7,7 +8,7 @@ let surface,referenceSamples=[],layer='speed';
 const reducedMotion=matchMedia('(prefers-reduced-motion: reduce)').matches;
 let renderer,scene,camera,world,cars=new Map(),labels=new Map(),ring,scale=1,cx=0,cy=0,yaw=.15,pitch=.83,zoom=190,dragging=false,prevX,prevY,webgl=true;
 const startTarget=new THREE.Vector3(), lookTarget=new THREE.Vector3();
-const color=d=>'#'+(d.team_colour||'c3f77b');
+const color=d=>'#'+(d.team_colour||'42e4cc');
 const name=n=>data.drivers.find(d=>String(d.driver_number)===String(n));
 const num=v=>Number(v).toLocaleString();
 function initScene(){try{
@@ -15,7 +16,7 @@ function initScene(){try{
  renderer.setClearColor(0x000000,0);scene=new THREE.Scene();scene.fog=new THREE.FogExp2(0x0d151c,.0028);
  camera=new THREE.PerspectiveCamera(39,1,.1,1200);scene.add(new THREE.AmbientLight(0xa7c2cf,2.1));
  const key=new THREE.DirectionalLight(0xffffff,3.2);key.position.set(40,100,60);scene.add(key);
- const rim=new THREE.DirectionalLight(0xb9ff7a,1.2);rim.position.set(-60,30,-80);scene.add(rim);
+ const rim=new THREE.DirectionalLight(0x44ead3,1.2);rim.position.set(-60,30,-80);scene.add(rim);
  world=new THREE.Group();scene.add(world);
  const grid=new THREE.GridHelper(400,60,0x304740,0x1b2b30);grid.position.y=-1.2;scene.add(grid);
  $('scene').addEventListener('webglcontextlost',e=>{e.preventDefault();enableFallback('3D graphics unavailable. Showing the measured 2D map.');});
@@ -49,7 +50,7 @@ function buildTrack(){
  for(const z of [-.55,.6]){const wing=new THREE.Mesh(new THREE.BoxGeometry(1.15,.08,.22),material);wing.position.set(0,.2,z);group.add(wing);for(const x of [-.48,.48]){const wheel=new THREE.Mesh(new THREE.BoxGeometry(.26,.3,.32),new THREE.MeshStandardMaterial({color:0x05090c}));wheel.position.set(x,.16,z*.7);group.add(wheel);}}
  world.add(group);cars.set(String(d.driver_number),group);
  const label=document.createElement('span');label.className='car-label';label.textContent=d.name_acronym;label.style.borderColor=color(d);$('labels').append(label);labels.set(String(d.driver_number),label);}
- ring=new THREE.Mesh(new THREE.RingGeometry(1.2,1.45,48),new THREE.MeshBasicMaterial({color:0xc3f77b,side:THREE.DoubleSide,transparent:true,opacity:.8}));ring.rotation.x=-Math.PI/2;world.add(ring);resetCamera();
+ ring=new THREE.Mesh(new THREE.RingGeometry(1.2,1.45,48),new THREE.MeshBasicMaterial({color:0x42e4cc,side:THREE.DoubleSide,transparent:true,opacity:.8}));ring.rotation.x=-Math.PI/2;world.add(ring);resetCamera();
 }
 function applyLayer(){
  if(!surface)return;const count=surface.geometry.attributes.position.count,colors=[],trace=referenceSamples;
@@ -125,8 +126,8 @@ async function loadSession(key){
   $('track-word').replaceChildren(document.createTextNode(circuit.toUpperCase()));const caption=document.createElement('span');caption.textContent=`${data.session.year} · EVENT ${entry?.round??'—'} · ${data.session.country.toUpperCase()}`;$('track-word').append(caption);
   $('weather').textContent=`TRACK ${data.weather.track_temperature??'—'}°C · AIR ${data.weather.air_temperature??'—'}°C`;
   $('timeline').max=data.session.duration;$('driver-count').textContent=`${data.drivers.length} DRIVERS`;$('last-lap-label').textContent=`LAP ${data.session.total_laps}`;
-  const url=new URL(location.href);url.searchParams.set('session',String(key));history.replaceState(null,'',url);
-  if(!hasReplay)$$('[data-view]').find(b=>b.dataset.view==='telemetry').click();
+  const url=new URL(location.href);if(view!=='championship'){url.searchParams.set('session',String(key));history.replaceState(null,'',url);}
+  if(!hasReplay&&view==='replay')$$('[data-view]').find(b=>b.dataset.view==='telemetry').click();
   updateUI();resize();if(webgl)$('status').textContent=hasReplay?'':'Recorded lap timing loaded. '+(data.availability?.reason??'GPS replay is unavailable from the source.');
  }catch(e){$('status').textContent=`Unable to load this archive. ${e.message}. Select a session to retry.`;}
  finally{if(version===loadVersion){$('session').disabled=false;$('season').disabled=false;}}
@@ -146,7 +147,7 @@ function seek(delta){if(!data)return;t=Math.max(0,Math.min(data.session.duration
 function download(content,type,file){const a=document.createElement('a'),url=URL.createObjectURL(new Blob([content],{type}));a.href=url;a.download=file;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}
 $('season').onchange=e=>{const circuit=catalog.find(s=>s.key===data?.session.key)?.circuit;const match=catalog.find(s=>s.year===Number(e.target.value)&&s.circuit===circuit);loadSession(showSeason(Number(e.target.value),match?.key));};$('session').onchange=e=>loadSession(e.target.value);$('play').onclick=toggle;$('back').onclick=()=>seek(-15);$('forward').onclick=()=>seek(15);$('timeline').oninput=e=>{t=Number(e.target.value);updateUI();};$('compare').onchange=drawSpeed;
 for(const id of ['analysis-a','analysis-b','clean-laps'])$(id).onchange=drawLaps;
-$$('[data-view]').forEach(b=>b.onclick=()=>{view=b.dataset.view;$$('[data-view]').forEach(n=>n.classList.toggle('active',n===b));['replay','telemetry','lab'].forEach(v=>$(v+'-view').hidden=v!==view);resize();});
+$$('[data-view]').forEach(b=>b.onclick=()=>{view=b.dataset.view;$$('[data-view]').forEach(n=>n.classList.toggle('active',n===b));['replay','telemetry','lab','championship'].forEach(v=>$(v+'-view').hidden=v!==view);const isChampionship=view==='championship';document.querySelector('.session-bar').hidden=isChampionship;$('status').hidden=isChampionship;const url=new URL(location.href);if(isChampionship){playing=false;url.searchParams.delete('session');openChampionship();}else{closeChampionship();if(data)url.searchParams.set('session',data.session.key);}history.replaceState(null,'',url);resize();});
 $$('[data-camera]').forEach(b=>b.onclick=()=>{cameraMode=b.dataset.camera;$$('[data-camera]').forEach(n=>n.classList.toggle('active',n===b));});$('reset-camera').onclick=resetCamera;
 $('open-timing').onclick=()=>$$('[data-view]').find(b=>b.dataset.view==='telemetry').click();
 $('about').onclick=()=>$('info-dialog').showModal();$('close-dialog').onclick=()=>$('info-dialog').close();$('info-dialog').onclick=e=>{if(e.target===$('info-dialog'))$('info-dialog').close();};
@@ -158,4 +159,4 @@ window.addEventListener('keydown',e=>{if(['INPUT','SELECT','TEXTAREA','BUTTON'].
 $('scene').addEventListener('pointerdown',e=>{dragging=true;prevX=e.clientX;prevY=e.clientY;$('scene').setPointerCapture(e.pointerId);});$('scene').addEventListener('pointermove',e=>{if(!dragging)return;yaw-=(e.clientX-prevX)*.008;pitch=Math.max(.2,Math.min(1.5,pitch+(e.clientY-prevY)*.005));prevX=e.clientX;prevY=e.clientY;});$('scene').addEventListener('pointerup',()=>dragging=false);$('scene').addEventListener('pointercancel',()=>dragging=false);$('scene').addEventListener('wheel',e=>{e.preventDefault();zoom=Math.max(70,Math.min(350,zoom+e.deltaY*.12));},{passive:false});
 new ResizeObserver(resize).observe($('stage'));window.addEventListener('resize',resize);
 function frame(now){const dt=last?Math.min((now-last)/1000,.25):0;last=now;if(data&&playing){t=Math.min(data.session.duration,t+dt*Number($('speed').value));if(t>=data.session.duration)playing=false;}if(data&&view==='replay'){drawScene();if(now-lastUI>150){updateUI();lastUI=now;}}requestAnimationFrame(frame);}
-initScene();initArchive();requestAnimationFrame(frame);
+initScene();initArchive();if(!new URL(location.href).searchParams.has('session'))document.querySelector('[data-view="championship"]').click();requestAnimationFrame(frame);

@@ -19,3 +19,7 @@ data/warehouse-stage-*/
 
 # Local desktop services, snapshots, credentials and launchers.
 /local/
+
+/dbt/championship/target/
+/dbt/championship/logs/
+/dbt/championship/.user.yml

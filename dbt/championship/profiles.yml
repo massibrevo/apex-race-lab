@@ -1,0 +1,7 @@
+apex_championship:
+  target: local
+  outputs:
+    local:
+      type: duckdb
+      path: "{{ env_var('APEX_CHAMPIONSHIP_DB') }}"
+      threads: 2
