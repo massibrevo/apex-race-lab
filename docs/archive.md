@@ -61,9 +61,9 @@ All 48 Grands Prix from 2024 and 2025. Every race includes recorded session lap 
 | 24 | Abu Dhabi Grand Prix | Yas Marina Circuit | 2025-12-07 | 9839 |
 
 
-## 2026 · completed source sessions as of 4 November 2026
+## 2026 · completed source sessions as of 27 November 2026
 
-18 measured GPS excerpts and 19 recorded timing archives. Monaco is timing-only: OpenF1 returned HTTP 404 for its GPS window. Event indices follow included source chronology; meeting/circuit labels are retained from the provider.
+20 measured GPS excerpts and 21 recorded timing archives. Monaco is timing-only: OpenF1 returned HTTP 404 for its GPS window. Event indices follow included source chronology; meeting/circuit labels are retained from the provider.
 
 | Index | Source Grand Prix | Source circuit | Race date | Session | GPS |
 |---:|---|---|---|---:|---|
@@ -86,3 +86,5 @@ All 48 Grands Prix from 2024 and 2025. Every race includes recorded session lap 
 | 17 | Singapore Grand Prix | Singapore | 2026-10-11 | 11388 | Yes |
 | 18 | United States Grand Prix | Austin | 2026-10-25 | 11396 | Yes |
 | 19 | Mexico City Grand Prix | Mexico City | 2026-11-01 | 11404 | Yes |
+| 20 | São Paulo Grand Prix | Interlagos | 2026-11-08 | 11412 | Yes |
+| 21 | Las Vegas Grand Prix | Las Vegas | 2026-11-22 | 11420 | Yes |
